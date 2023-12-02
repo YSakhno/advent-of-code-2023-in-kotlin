@@ -4,9 +4,9 @@ import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
 /** Reads lines from the given input txt file. */
-fun readInput(name: String) = Path("src/$name.txt").readLines()
+fun readInput(name: String) = Path("src/$name.txt").readLines().filter(String::isNotBlank)
 
-/** Converts string to md5 hash. */
+/** Converts string to MD5 hash. */
 fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteArray()))
     .toString(16)
     .padStart(32, '0')
