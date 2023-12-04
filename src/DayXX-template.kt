@@ -13,9 +13,10 @@ fun main() {
         return input.size
     }
 
-    // test if implementation meets criteria from the description, like:
+    // Test if implementation meets criteria from the description
     val testInput = readInput("${filename.dayNumber}_test")
-    check(part1(testInput) == 1)
+    check(part1(testInput) == 0)
+    check(part2(testInput) == 0)
 
     val input = readInput(filename.dayNumber)
     part1(input).println()
