@@ -179,11 +179,14 @@ fun main() {
             .map(String::toLong)
             .chunked(2)
             .map { (start, length) -> start..<start + length }
-            .minOf { range ->
+            .parallelStream()
+            .map { range ->
                 range.minOf { seed ->
                     mappings.fold(seed) { acc, mapping -> mapping[acc] }
                 }
             }
+            .min(naturalOrder())
+            .orElse(0L)
     }
 
     // Test if implementation meets criteria from the description
