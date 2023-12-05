@@ -151,8 +151,8 @@ private operator fun LongToLongMap.get(index: Long) = binarySearch(RangedMapping
 private fun List<String>.parseMappings(): List<LongToLongMap> =
     drop(1).fold(mutableListOf<MutableList<RangedMapping>>()) { acc, line ->
         if (!line.contains("map")) {
-            line.split(' ')
-                .map(String::toLong)
+            line.allLongs()
+                .toList()
                 .let { (dest, src, length) -> RangedMapping(dest, src, length) }
                 .also { acc.last().add(it) }
         } else {
@@ -164,9 +164,7 @@ private fun List<String>.parseMappings(): List<LongToLongMap> =
 fun main() {
     fun part1(input: List<String>) = input.parseMappings().let { mappings ->
         input.first()
-            .removePrefix("seeds: ")
-            .split(' ')
-            .map(String::toLong)
+            .allLongs()
             .minOf { seed ->
                 mappings.fold(seed) { acc, mapping -> mapping[acc] }
             }
@@ -174,11 +172,10 @@ fun main() {
 
     fun part2(input: List<String>) = input.parseMappings().let { mappings ->
         input.first()
-            .removePrefix("seeds: ")
-            .split(' ')
-            .map(String::toLong)
+            .allLongs()
             .chunked(2)
             .map { (start, length) -> start..<start + length }
+            .toList()
             .parallelStream()
             .map { range ->
                 range.minOf { seed ->
