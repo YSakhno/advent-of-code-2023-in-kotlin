@@ -143,7 +143,7 @@ private data class RangedMapping(val dest: Long, val src: Long, val length: Long
 
 private typealias LongToLongMap = List<RangedMapping>
 
-private operator fun LongToLongMap.get(index: Long) = binarySearch(RangedMapping(0, index, 1))
+private operator fun LongToLongMap.get(index: Long) = inlinableBinarySearch { it.src.compareTo(index) }
     .let { if (it < 0) (-it - 2) else it }
     .coerceAtLeast(0)
     .let { this[it][index] }
