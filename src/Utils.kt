@@ -78,3 +78,12 @@ fun String.allDoubles(): Sequence<Double> =
  * recognized as a valid word.
  */
 fun String.allWords(): Sequence<String> = WORD_REGEX.findAll(this).map(MatchResult::value)
+
+/** Calculates the least common multiple (LCM) of this [BigInteger] and the given `BigInteger` [value]. */
+fun BigInteger.lcm(value: BigInteger): BigInteger = this * value / gcd(value)
+
+/** Calculates the least common multiple (LCM) of the given [values]. */
+fun lcm(vararg values: BigInteger): BigInteger = values.reduce { acc, value -> acc.lcm(value) }
+
+/** Calculates the least common multiple (LCM) of the given [values]. */
+fun lcm(values: Iterable<BigInteger>): BigInteger = values.reduce { acc, value -> acc.lcm(value) }
