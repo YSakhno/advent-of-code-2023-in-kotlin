@@ -1,4 +1,6 @@
 /*
+ * --- Day 12: Hot Springs ---
+ *
  * In the giant field just outside, the springs are arranged into rows. For each row, the condition records show every
  * spring and whether it is operational (.) or damaged (#). This is the part of the condition records that is itself
  * damaged; for some springs, it is simply unknown (?) whether the spring is operational or damaged.
@@ -104,23 +106,28 @@
  *
  * Unfold your condition records; what is the new sum of possible arrangement counts?
  */
+package io.ysakhno.adventofcode2023.day12
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.allInts
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 @JvmInline
-value class Condition(val text: String) {
+private value class Condition(val text: String) {
     override fun toString() = text
 }
 
-val Condition.length get() = text.length
+private val Condition.length get() = text.length
 
-val Condition.softGroups get() = text.split('.').filter(String::isNotBlank).map(::Condition)
+private val Condition.softGroups get() = text.split('.').filter(String::isNotBlank).map(::Condition)
 
-fun Condition.splitAt(index: Int) = if (text[index] == '?') {
+private fun Condition.splitAt(index: Int) = if (text[index] == '?') {
     Condition(text.substring(0, index)) to Condition(text.substring(index + 1))
 } else null
 
-class MemoizedCounter {
+private class MemoizedCounter {
 
     private val cache = mutableMapOf<Pair<List<Condition>, List<Int>>, Long>()
 
@@ -171,36 +178,36 @@ class MemoizedCounter {
     }
 }
 
-fun String.generateStringVariations(): List<String> {
+private fun String.generateStringVariations(): List<String> {
     val positions = "\\?".toRegex().findAll(this).map { it.range.first }.toList()
     return List(1 shl positions.size) { index ->
-        positions.filterIndexed { idx, pos -> (index and (1 shl idx)) != 0 }
+        positions.filterIndexed { idx, _ -> (index and (1 shl idx)) != 0 }
             .fold(replace('?', '.')) { acc, pos -> acc.replaceRange(pos, pos + 1, "#") }
     }
 }
 
+private fun part1(input: List<String>) = input.asSequence()
+    .map { line -> line.split(' ') }
+    .map { (conditions, groups) -> conditions to groups.allInts().toList() }
+    .flatMap { (conditions, groups) -> conditions.generateStringVariations().map { it.split('.') to groups } }
+    .map { (possibility, groups) -> possibility.filter(String::isNotEmpty) to groups }
+    .filter { (possibility, groups) -> possibility.map(String::length) == groups }
+    .count()
+
+private fun part2(input: List<String>): Int {
+    input.map { line -> line.split(' ') }
+        .map { (conditions, groups) -> Condition(conditions).softGroups to groups.allInts().toList() }
+        .map { (conditions, groups) -> MemoizedCounter().countPossibilities(conditions, groups) }
+    return input.size
+}
+
 fun main() {
-    fun part1(input: List<String>) = input.asSequence()
-        .map { line -> line.split(' ') }
-        .map { (conditions, groups) -> conditions to groups.allInts().toList() }
-        .flatMap { (conditions, groups) -> conditions.generateStringVariations().map { it.split('.') to groups } }
-        .map { (possibility, groups) -> possibility.filter(String::isNotEmpty) to groups }
-        .filter { (possibility, groups) -> possibility.map(String::length) == groups }
-        .count()
-
-    fun part2(input: List<String>): Int {
-        input.map { line -> line.split(' ') }
-            .map { (conditions, groups) -> Condition(conditions).softGroups to groups.allInts().toList() }
-            .map { (conditions, groups) -> MemoizedCounter().countPossibilities(conditions, groups) }
-        return input.size
-    }
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 21)
     check(part2(testInput) == 6)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

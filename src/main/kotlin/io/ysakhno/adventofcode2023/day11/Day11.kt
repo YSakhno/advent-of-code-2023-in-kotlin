@@ -115,10 +115,14 @@
  * Starting with the same initial image, expand the universe according to these new rules, then find the length of the
  * shortest path between every pair of galaxies. What is the sum of these lengths?
  */
+package io.ysakhno.adventofcode2023.day11
 
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+import io.ysakhno.adventofcode2023.util.transpose
 import kotlin.math.abs
 
-private val filename = object {}
+private val problemInput = object : ProblemInput {}
 
 private data class Galaxy(val x: Long, val y: Long)
 
@@ -127,8 +131,6 @@ private fun Galaxy.manhattanDistance(other: Galaxy) = abs(other.x - x) + abs(oth
 private typealias Universe = List<List<Char>>
 
 private fun List<String>.toUniverse(): Universe = map(String::toList)
-
-private fun Universe.transpose(): Universe = (this as Iterable<List<Char>>).transpose()
 
 private fun Universe.expand(expansionFactor: Int = 2): Universe {
     val preExpandedRow = List(expansionFactor) { List(size) { '.' } }
@@ -152,19 +154,19 @@ private fun Universe.solve(expansionFactor: Int = 2): Long {
     }.flatten().sum()
 }
 
+private fun part1(input: List<String>) = input.toUniverse().solve()
+
+private fun part2(input: List<String>) = input.toUniverse().solve(1_000_000)
+
 fun main() {
-    fun part1(input: List<String>) = input.toUniverse().solve()
-
-    fun part2(input: List<String>) = input.toUniverse().solve(1_000_000)
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 374L)
     check(testInput.toUniverse().solve(10) == 1030L)
     check(testInput.toUniverse().solve(100) == 8410L)
-    check(testInput.toUniverse().solve(1_000_000) == 82_000_210L)
+    check(part2(testInput) == 82_000_210L)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

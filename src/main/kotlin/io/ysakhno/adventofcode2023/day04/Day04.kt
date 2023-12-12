@@ -1,5 +1,3 @@
-import kotlin.math.min
-
 /*
  * Puzzle input is a list of scratchcards, all with their opaque covering already scratched off. Each card has two lists
  * of numbers separated by a vertical bar (|): a list of winning numbers and then a list of numbers drawn.
@@ -71,8 +69,13 @@ import kotlin.math.min
  * Process all of the original and copied scratchcards until no more scratchcards are won. Including the original set of
  * scratchcards, how many total scratchcards do you end up with?
  */
+package io.ysakhno.adventofcode2023.day04
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+import kotlin.math.min
+
+private val problemInput = object : ProblemInput {}
 
 private data class Scratchcard(val originalIndex: Int, val name: String, val winning: Set<Int>, val drawn: Set<Int>) {
 
@@ -91,33 +94,33 @@ private fun String.parseScratchcard(index: Int): Scratchcard {
         .let { (winning, drawn) -> Scratchcard(index, name, winning, drawn) }
 }
 
-fun main() {
-    fun part1(input: List<String>) =
-        input.mapIndexed { idx, line -> line.parseScratchcard(idx) }.sumOf(Scratchcard::points)
+private fun part1(input: List<String>) =
+    input.mapIndexed { idx, line -> line.parseScratchcard(idx) }.sumOf(Scratchcard::points)
 
-    fun part2(input: List<String>): Int {
-        val scratchcards = input.mapIndexed { idx, line -> line.parseScratchcard(idx) }.toMutableList()
-        var i = 0
+private fun part2(input: List<String>): Int {
+    val scratchcards = input.mapIndexed { idx, line -> line.parseScratchcard(idx) }.toMutableList()
+    var i = 0
 
-        while (i < scratchcards.size) {
-            val scratchcard = scratchcards[i++]
-            val moreScratchCards = scratchcards.subList(
-                scratchcard.originalIndex + 1,
-                min(scratchcard.originalIndex + scratchcard.numCardsWon + 1, input.size),
-            )
+    while (i < scratchcards.size) {
+        val scratchcard = scratchcards[i++]
+        val moreScratchCards = scratchcards.subList(
+            scratchcard.originalIndex + 1,
+            min(scratchcard.originalIndex + scratchcard.numCardsWon + 1, input.size),
+        )
 
-            scratchcards.addAll(moreScratchCards)
-        }
-
-        return scratchcards.size
+        scratchcards.addAll(moreScratchCards)
     }
 
-    // test if implementation meets criteria from the description, like:
-    val testInput = readInput("${filename.dayNumber}_test")
+    return scratchcards.size
+}
+
+fun main() {
+    // Test if implementation meets criteria from the description
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 13)
     check(part2(testInput) == 30)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

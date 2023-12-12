@@ -51,8 +51,12 @@
  *
  * What is the sum of all of the gear ratios in your engine schematic?
  */
+package io.ysakhno.adventofcode2023.day03
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 private val SYMBOLS = setOf('#', '$', '%', '&', '*', '+', '-', '/', '=', '@')
 
@@ -149,17 +153,17 @@ private data class Engine(private val lines: List<String>) {
     }
 }
 
+private fun part1(input: List<String>) = Engine(input).partNumbers.sum()
+
+private fun part2(input: List<String>) = Engine(input).gears.sumOf(Gear::ratio)
+
 fun main() {
-    fun part1(input: List<String>) = Engine(input).partNumbers.sum()
-
-    fun part2(input: List<String>) = Engine(input).gears.sumOf(Gear::ratio)
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 4361)
     check(part2(testInput) == 467835)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

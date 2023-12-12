@@ -83,8 +83,13 @@
  * Simultaneously start on every node that ends with A. How many steps does it take before you're only on nodes that end
  * with Z?
  */
+package io.ysakhno.adventofcode2023.day08
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.allWords
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 private typealias WorldMap = Map<String, Pair<String, String>>
 
@@ -175,80 +180,80 @@ private fun createStrider(walker: Walker, cycleLen: Int): Strider {
     return Strider(destinationIndices, cycleLen)
 }
 
+private fun part1(input: List<String>): Int {
+    val steps = input.first()
+    val worldMap = input.drop(1)
+        .map { it.allWords().toList() }
+        .fold(mutableMapOf<String, Pair<String, String>>()) { acc, (src, left, right) ->
+            acc[src] = left to right
+            acc
+        }
+
+    var current = "AAA"
+    var numStepsTaken = 0
+
+    while (current != "ZZZ") {
+        val (left, right) = worldMap.getValue(current)
+        current = when (steps.stepAt(numStepsTaken++)) {
+            'R' -> right
+            'L' -> left
+            else -> error("Unknown direction")
+        }
+    }
+
+    return numStepsTaken
+}
+
+private fun part2(input: List<String>): Long {
+    val steps = input.first()
+    val worldMap: WorldMap = input.drop(1)
+        .map { "\\b[0-9A-Z]+\\b".toRegex().findAll(it).map(MatchResult::value).map(String::reversed).toList() }
+        .fold(mutableMapOf()) { acc, (src, left, right) ->
+            acc[src] = left to right
+            acc
+        }
+
+    val walkers = worldMap.keys.filter { it[0] == 'A' }.map { Walker(steps, worldMap, it) }
+    val cycleStartIndices = walkers.map { findCycleStart(it.current, worldMap, steps) }.println()
+    val maxCycleStartIndex = cycleStartIndices.max()
+
+    while (walkers.any { !it.isArrived } && walkers.first().numStepsTaken < maxCycleStartIndex) {
+        walkers.forEach(Walker::advance)
+    }
+
+    var numStepsTaken = walkers.first().numStepsTaken
+    if  (walkers.all(Walker::isArrived)) return numStepsTaken
+
+    val cycleLengths = List(cycleStartIndices.size) { idx ->
+        findCycleLength(walkers[idx], worldMap, steps)
+    }.println()
+
+    val striders = cycleLengths.mapIndexed { idx, len -> createStrider(walkers[idx], len) }
+    var iterNum = 0
+
+    while (true) {
+        val nextSteps = striders.map(Strider::distToNext)
+        if (nextSteps.all { it == 0 }) return numStepsTaken.also { println() }
+        val minSteps = nextSteps.filter { it != 0 }.min()
+
+        striders.forEach { strider -> strider.advanceBy(minSteps) }
+        numStepsTaken += minSteps.toLong()
+
+        if (++iterNum == 10_000_000) {
+            print("\rTook $numStepsTaken steps so far")
+            iterNum = 0
+        }
+    }
+}
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        val steps = input.first()
-        val worldMap = input.drop(1)
-            .map { it.allWords().toList() }
-            .fold(mutableMapOf<String, Pair<String, String>>()) { acc, (src, left, right) ->
-                acc[src] = left to right
-                acc
-            }
-
-        var current = "AAA"
-        var numStepsTaken = 0
-
-        while (current != "ZZZ") {
-            val (left, right) = worldMap.getValue(current)
-            current = when (steps.stepAt(numStepsTaken++)) {
-                'R' -> right
-                'L' -> left
-                else -> error("Unknown direction")
-            }
-        }
-
-        return numStepsTaken
-    }
-
-    fun part2(input: List<String>): Long {
-        val steps = input.first()
-        val worldMap: WorldMap = input.drop(1)
-            .map { "\\b[0-9A-Z]+\\b".toRegex().findAll(it).map(MatchResult::value).map(String::reversed).toList() }
-            .fold(mutableMapOf()) { acc, (src, left, right) ->
-                acc[src] = left to right
-                acc
-            }
-
-        val walkers = worldMap.keys.filter { it[0] == 'A' }.map { Walker(steps, worldMap, it) }
-        val cycleStartIndices = walkers.map { findCycleStart(it.current, worldMap, steps) }.println()
-        val maxCycleStartIndex = cycleStartIndices.max()
-
-        while (walkers.any { !it.isArrived } && walkers.first().numStepsTaken < maxCycleStartIndex) {
-            walkers.forEach(Walker::advance)
-        }
-
-        var numStepsTaken = walkers.first().numStepsTaken
-        if  (walkers.all(Walker::isArrived)) return numStepsTaken
-
-        val cycleLengths = List(cycleStartIndices.size) { idx ->
-            findCycleLength(walkers[idx], worldMap, steps)
-        }.println()
-
-        val striders = cycleLengths.mapIndexed { idx, len -> createStrider(walkers[idx], len) }
-        var iterNum = 0
-
-        while (true) {
-            val nextSteps = striders.map(Strider::distToNext)
-            if (nextSteps.all { it == 0 }) return numStepsTaken.also { println() }
-            val minSteps = nextSteps.filter { it != 0 }.min()
-
-            striders.forEach { strider -> strider.advanceBy(minSteps) }
-            numStepsTaken += minSteps.toLong()
-
-            if (++iterNum == 10_000_000) {
-                print("\rTook $numStepsTaken steps so far")
-                iterNum = 0
-            }
-        }
-    }
-
     // Test if implementation meets criteria from the description
-    val testInput1 = readInput("${filename.dayNumber}_test-1")
-    val testInput2 = readInput("${filename.dayNumber}_test-2")
+    val testInput1 = problemInput.readTest(1)
+    val testInput2 = problemInput.readTest(2)
     check(part1(testInput1) == 6)
     check(part2(testInput2) == 6L)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

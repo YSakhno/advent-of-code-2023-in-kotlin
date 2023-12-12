@@ -54,8 +54,12 @@
  *
  * What is the sum of all of the calibration values?
  */
+package io.ysakhno.adventofcode2023.day01
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 @JvmInline
 private value class CalibrationValue(val v: Int) {
@@ -112,14 +116,14 @@ private fun String.toCalibrationValueComplex(): CalibrationValue {
     return CalibrationValue(firstDigit * 10 + lastDigit)
 }
 
+private fun part1(input: List<String>) =
+    input.filterNot(String::isBlank).map(String::toCalibrationValueSimple).sumOf(CalibrationValue::v)
+
+private fun part2(input: List<String>) =
+    input.filterNot(String::isBlank).map(String::toCalibrationValueComplex).sumOf(CalibrationValue::v)
+
 fun main() {
-    fun part1(input: List<String>) =
-        input.filterNot(String::isBlank).map(String::toCalibrationValueSimple).sumOf(CalibrationValue::v)
-
-    fun part2(input: List<String>) =
-        input.filterNot(String::isBlank).map(String::toCalibrationValueComplex).sumOf(CalibrationValue::v)
-
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

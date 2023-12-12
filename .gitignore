@@ -1,6 +1,4 @@
 .gradle
 .idea
 build
-src/**/*.txt
-!src/**/*_test.txt
-!src/**/*_test-?.txt
+/src/main/**/input.txt

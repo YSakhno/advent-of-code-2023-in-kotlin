@@ -103,8 +103,14 @@
  * Analyze your OASIS report again, this time extrapolating the previous value for each history. What is the sum of
  * these extrapolated values?
  */
+package io.ysakhno.adventofcode2023.day09
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.allInts
+import io.ysakhno.adventofcode2023.util.differences
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 private fun extrapolate(history: List<Int>) =
     generateSequence(history) { prev -> if (prev.any { it != 0 }) prev.differences() else null }
@@ -112,17 +118,17 @@ private fun extrapolate(history: List<Int>) =
         .foldRight(0 to 0) { diff, (first, last) -> diff.first() - first to diff.last() + last }
         .let { (firstVal, lastVal) -> listOf(firstVal) + history + lastVal }
 
+private fun part1(input: List<String>) = input.map { it.allInts().toList() }.map(::extrapolate).sumOf { it.last() }
+
+private fun part2(input: List<String>) = input.map { it.allInts().toList() }.map(::extrapolate).sumOf { it.first() }
+
 fun main() {
-    fun part1(input: List<String>) = input.map { it.allInts().toList() }.map(::extrapolate).sumOf { it.last() }
-
-    fun part2(input: List<String>) = input.map { it.allInts().toList() }.map(::extrapolate).sumOf { it.first() }
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 114)
     check(part2(testInput) == 2)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

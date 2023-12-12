@@ -1,5 +1,7 @@
 @file:Suppress("unused")
 
+package io.ysakhno.adventofcode2023.util
+
 /**
  * Searches this list or its sub-range for an element for which the given [comparison] function returns zero using the
  * binary search algorithm.  Unlike the [binarySearch] function from Kotlin Standard Library, this function (and

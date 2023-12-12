@@ -1,13 +1,3 @@
-import Card.J
-import Card.JOKER
-import HandType.FIVE_OF_A_KIND
-import HandType.FOUR_OF_A_KIND
-import HandType.FULL_HOUSE
-import HandType.HIGH_CARD
-import HandType.ONE_PAIR
-import HandType.THREE_OF_A_KIND
-import HandType.TWO_PAIR
-
 /*
  * --- Day 7: Camel Cards ---
  *
@@ -87,8 +77,21 @@ import HandType.TWO_PAIR
  *
  * Using the new joker rule, find the rank of every hand in your set. What are the new total winnings?
  */
+package io.ysakhno.adventofcode2023.day07
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.day07.Card.J
+import io.ysakhno.adventofcode2023.day07.Card.JOKER
+import io.ysakhno.adventofcode2023.day07.HandType.FIVE_OF_A_KIND
+import io.ysakhno.adventofcode2023.day07.HandType.FOUR_OF_A_KIND
+import io.ysakhno.adventofcode2023.day07.HandType.FULL_HOUSE
+import io.ysakhno.adventofcode2023.day07.HandType.HIGH_CARD
+import io.ysakhno.adventofcode2023.day07.HandType.ONE_PAIR
+import io.ysakhno.adventofcode2023.day07.HandType.THREE_OF_A_KIND
+import io.ysakhno.adventofcode2023.day07.HandType.TWO_PAIR
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+
+private val problemInput = object : ProblemInput {}
 
 private enum class Card(val label: Char, val rank: Int) {
     A('A', 14), K('K', 13), Q('Q', 12), J('J', 11), T('T', 10),
@@ -159,23 +162,23 @@ private fun List<Hand>.rankThenSumBids() = sorted()
     .mapIndexed { idx, hand -> (idx + 1) * hand.bid }
     .sum()
 
+private fun part1(input: List<String>) = input.map { it.split(' ') }
+    .map { (str1, str2) -> str1.map(CHARS_TO_CARD_MAP::getValue) to str2.toInt() }
+    .map { (hand, bid) -> Hand(hand, bid) }
+    .rankThenSumBids()
+
+private fun part2(input: List<String>) = input.map { it.split(' ') }
+    .map { (str1, str2) -> str1.replace('J', '?').map(CHARS_TO_CARD_MAP::getValue) to str2.toInt() }
+    .map { (hand, bid) -> Hand(hand, bid) }
+    .rankThenSumBids()
+
 fun main() {
-    fun part1(input: List<String>) = input.map { it.split(' ') }
-        .map { (str1, str2) -> str1.map(CHARS_TO_CARD_MAP::getValue) to str2.toInt() }
-        .map { (hand, bid) -> Hand(hand, bid) }
-        .rankThenSumBids()
-
-    fun part2(input: List<String>) = input.map { it.split(' ') }
-        .map { (str1, str2) -> str1.replace('J', '?').map(CHARS_TO_CARD_MAP::getValue) to str2.toInt() }
-        .map { (hand, bid) -> Hand(hand, bid) }
-        .rankThenSumBids()
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 6440)
     check(part2(testInput) == 5905)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

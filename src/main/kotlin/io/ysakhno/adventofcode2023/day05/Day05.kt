@@ -1,5 +1,3 @@
-import kotlin.time.measureTime
-
 /*
  * --- Day 5: If You Give A Seed A Fertilizer ---
  *
@@ -132,8 +130,15 @@ import kotlin.time.measureTime
  * Consider all of the initial seed numbers listed in the ranges on the first line of the almanac. What is the lowest
  * location number that corresponds to any of the initial seed numbers?
  */
+package io.ysakhno.adventofcode2023.day05
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.allLongs
+import io.ysakhno.adventofcode2023.util.inlinableBinarySearch
+import io.ysakhno.adventofcode2023.util.println
+import kotlin.time.measureTime
+
+private val problemInput = object : ProblemInput {}
 
 private data class RangedMapping(val dest: Long, val src: Long, val length: Long): Comparable<RangedMapping> {
     override fun compareTo(other: RangedMapping) = src.compareTo(other.src)
@@ -161,37 +166,37 @@ private fun List<String>.parseMappings(): List<LongToLongMap> =
         acc
     }.map(LongToLongMap::sorted)
 
-fun main() {
-    fun part1(input: List<String>) = input.parseMappings().let { mappings ->
-        input.first()
-            .allLongs()
-            .minOf { seed ->
+private fun part1(input: List<String>) = input.parseMappings().let { mappings ->
+    input.first()
+        .allLongs()
+        .minOf { seed ->
+            mappings.fold(seed) { acc, mapping -> mapping[acc] }
+        }
+}
+
+private fun part2(input: List<String>) = input.parseMappings().let { mappings ->
+    input.first()
+        .allLongs()
+        .chunked(2)
+        .map { (start, length) -> start..<start + length }
+        .toList()
+        .parallelStream()
+        .map { range ->
+            range.minOf { seed ->
                 mappings.fold(seed) { acc, mapping -> mapping[acc] }
             }
-    }
+        }
+        .min(naturalOrder())
+        .orElse(0L)
+}
 
-    fun part2(input: List<String>) = input.parseMappings().let { mappings ->
-        input.first()
-            .allLongs()
-            .chunked(2)
-            .map { (start, length) -> start..<start + length }
-            .toList()
-            .parallelStream()
-            .map { range ->
-                range.minOf { seed ->
-                    mappings.fold(seed) { acc, mapping -> mapping[acc] }
-                }
-            }
-            .min(naturalOrder())
-            .orElse(0L)
-    }
-
+fun main() {
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 35L)
     check(part2(testInput) == 46L)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     measureTime {
         part2(input).println()

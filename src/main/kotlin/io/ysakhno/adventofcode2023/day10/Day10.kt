@@ -214,18 +214,21 @@
  * Figure out whether you have time to search for the nest by calculating the area within the loop. How many tiles are
  * enclosed by the loop?
  */
+package io.ysakhno.adventofcode2023.day10
 
-import Pipe.GROUND
-import Pipe.HORIZONTAL
-import Pipe.INSIDE
-import Pipe.NORTH_TO_EAST
-import Pipe.NORTH_TO_WEST
-import Pipe.SOUTH_TO_EAST
-import Pipe.SOUTH_TO_WEST
-import Pipe.START
-import Pipe.VERTICAL
+import io.ysakhno.adventofcode2023.day10.Pipe.GROUND
+import io.ysakhno.adventofcode2023.day10.Pipe.HORIZONTAL
+import io.ysakhno.adventofcode2023.day10.Pipe.INSIDE
+import io.ysakhno.adventofcode2023.day10.Pipe.NORTH_TO_EAST
+import io.ysakhno.adventofcode2023.day10.Pipe.NORTH_TO_WEST
+import io.ysakhno.adventofcode2023.day10.Pipe.SOUTH_TO_EAST
+import io.ysakhno.adventofcode2023.day10.Pipe.SOUTH_TO_WEST
+import io.ysakhno.adventofcode2023.day10.Pipe.START
+import io.ysakhno.adventofcode2023.day10.Pipe.VERTICAL
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
 
-private val filename = object {}
+private val problemInput = object : ProblemInput {}
 
 private enum class Pipe(
     val symbol: Char,
@@ -383,34 +386,34 @@ private fun findLoopedPipe(area: Area): List<Point> {
     return pipe
 }
 
-fun main() {
-    fun part1(input: List<String>) = findLoopedPipe(input.map { row -> row.map(Char::toPipe) }).size / 2
+private fun part1(input: List<String>) = findLoopedPipe(input.map { row -> row.map(Char::toPipe) }).size / 2
 
-    fun part2(input: List<String>): Int {
-        val area: Area = input.map { row -> row.map(Char::toPipe) }
-        val areaWithPipe = area.copyWithPipe(findLoopedPipe(area))
-        val enclosed = mutableListOf<Point>()
+private fun part2(input: List<String>): Int {
+    val area: Area = input.map { row -> row.map(Char::toPipe) }
+    val areaWithPipe = area.copyWithPipe(findLoopedPipe(area))
+    val enclosed = mutableListOf<Point>()
 
-        for (y in areaWithPipe.indices) {
-            for (x in 0..<areaWithPipe.width) {
-                if (areaWithPipe[x, y] == GROUND && areaWithPipe.isInside(x, y)) {
-                    enclosed += Point(x, y)
-                }
+    for (y in areaWithPipe.indices) {
+        for (x in 0..<areaWithPipe.width) {
+            if (areaWithPipe[x, y] == GROUND && areaWithPipe.isInside(x, y)) {
+                enclosed += Point(x, y)
             }
         }
-
-        areaWithPipe.copyWithEnclosed(enclosed).print()
-
-        return enclosed.size
     }
 
+    areaWithPipe.copyWithEnclosed(enclosed).print()
+
+    return enclosed.size
+}
+
+fun main() {
     // Test if implementation meets criteria from the description
-    val testInput1 = readInput("${filename.dayNumber}_test")
-    val testInput2 = readInput("${filename.dayNumber}_test-2")
+    val testInput1 = problemInput.readTest(1)
+    val testInput2 = problemInput.readTest(2)
     check(part1(testInput1) == 8)
     check(part2(testInput2) == 10)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

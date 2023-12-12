@@ -1,5 +1,7 @@
 @file:Suppress("unused") // it's a library of utility functions; not all of them need to be used right away
 
+package io.ysakhno.adventofcode2023.util
+
 import java.math.BigDecimal
 import java.math.BigInteger
 

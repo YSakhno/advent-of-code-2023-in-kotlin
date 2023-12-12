@@ -1,5 +1,3 @@
-import kotlin.math.max
-
 /*
  * --- Day 2: Cube Conundrum ---
  *
@@ -73,8 +71,13 @@ import kotlin.math.max
  *
  * For each game, find the minimum set of cubes that must have been present. What is the sum of the power of these sets?
  */
+package io.ysakhno.adventofcode2023.day02
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.println
+import kotlin.math.max
+
+private val problemInput = object : ProblemInput {}
 
 private data class CubeSet(val red: Int, val green: Int, val blue: Int) {
     val power
@@ -114,13 +117,13 @@ private fun String.parseGame(): Game {
 
 private fun String.splitTrimming(delimiter: Char) = split(delimiter).map(String::trim)
 
+private fun part1(input: List<String>) = input.map(String::parseGame).filter(Game::isPossible).sumOf(Game::id)
+
+private fun part2(input: List<String>) =
+    input.map(String::parseGame).map(Game::findMinimumSetOfCubesNecessary).sumOf(CubeSet::power)
+
 fun main() {
-    fun part1(input: List<String>) = input.map(String::parseGame).filter(Game::isPossible).sumOf(Game::id)
-
-    fun part2(input: List<String>) =
-        input.map(String::parseGame).map(Game::findMinimumSetOfCubesNecessary).sumOf(CubeSet::power)
-
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }

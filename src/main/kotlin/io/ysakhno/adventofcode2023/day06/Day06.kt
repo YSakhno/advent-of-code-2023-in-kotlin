@@ -79,31 +79,37 @@
  *
  * How many ways can you beat the record in this one much longer race?
  */
+package io.ysakhno.adventofcode2023.day06
 
-private val filename = object {}
+import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.allLongs
+import io.ysakhno.adventofcode2023.util.println
+import io.ysakhno.adventofcode2023.util.transpose
+
+private val problemInput = object : ProblemInput {}
 
 private fun computeDistance(timeAllowed: Long, recordDistance: Long) = (0..timeAllowed).asSequence()
     .map { timeCharging -> timeCharging * (timeAllowed - timeCharging) }
     .count { distance -> distance > recordDistance }
 
+private fun part1(input: List<String>): Int =
+    input.map { it.allLongs().toList() }
+        .transpose()
+        .map { (timeAllowed, recordDistance) -> computeDistance(timeAllowed, recordDistance) }
+        .reduce { acc, i -> acc * i }
+
+private fun part2(input: List<String>) = input.map { it.substringAfter(':') }
+    .map { it.replace(" ", "") }
+    .map(String::toLong)
+    .let { (timeAllowed, recordDistance) -> computeDistance(timeAllowed, recordDistance) }
+
 fun main() {
-    fun part1(input: List<String>): Int =
-        input.map { it.allLongs().toList() }
-            .transpose()
-            .map { (timeAllowed, recordDistance) -> computeDistance(timeAllowed, recordDistance) }
-            .reduce { acc, i -> acc * i }
-
-    fun part2(input: List<String>) = input.map { it.substringAfter(':') }
-        .map { it.replace(" ", "") }
-        .map(String::toLong)
-        .let { (timeAllowed, recordDistance) -> computeDistance(timeAllowed, recordDistance) }
-
     // Test if implementation meets criteria from the description
-    val testInput = readInput("${filename.dayNumber}_test")
+    val testInput = problemInput.readTest()
     check(part1(testInput) == 288)
     check(part2(testInput) == 71503)
 
-    val input = readInput(filename.dayNumber)
+    val input = problemInput.read()
     part1(input).println()
     part2(input).println()
 }
