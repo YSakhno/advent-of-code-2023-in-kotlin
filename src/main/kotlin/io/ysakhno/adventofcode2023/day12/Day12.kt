@@ -110,72 +110,63 @@ package io.ysakhno.adventofcode2023.day12
 
 import io.ysakhno.adventofcode2023.util.ProblemInput
 import io.ysakhno.adventofcode2023.util.allInts
+import io.ysakhno.adventofcode2023.util.memoize
 import io.ysakhno.adventofcode2023.util.println
+import kotlin.math.min
 
 private val problemInput = object : ProblemInput {}
 
 @JvmInline
 private value class Condition(val text: String) {
+    val containsKnown get() = text.contains('#')
+    val indexOfFirstKnown get() = text.indexOfFirst { it == '#' }
+    val length get() = text.length
+    val softGroups get() = text.split('.').filter(String::isNotBlank).map(::Condition)
     override fun toString() = text
+    fun splitAt(index: Int) = if (index == length) this to Condition("")
+        else if (text[index] == '?') {
+            Condition(text.substring(0, index)) to Condition(text.substring(index + 1))
+        } else null
 }
 
-private val Condition.length get() = text.length
+private val List<Condition>.containsKnown get() = any(Condition::containsKnown)
 
-private val Condition.softGroups get() = text.split('.').filter(String::isNotBlank).map(::Condition)
+private class Counter {
+    val countPossibilities: (conditions: List<Condition>, groupSizes: List<Int>) -> Long by
+        memoize { conditions: List<Condition>, groupSizes: List<Int> ->
+            // Handle edge/degenerate cases first
+            if (groupSizes.isEmpty()) return@memoize if (conditions.containsKnown) 0L else 1L
+            else if (conditions.isEmpty()) return@memoize 0L
 
-private fun Condition.splitAt(index: Int) = if (text[index] == '?') {
-    Condition(text.substring(0, index)) to Condition(text.substring(index + 1))
-} else null
-
-private class MemoizedCounter {
-
-    private val cache = mutableMapOf<Pair<List<Condition>, List<Int>>, Long>()
-
-    fun countPossibilities(conditions: List<Condition>, groupSizes: List<Int>, depth: Int = 0): Long {
-        val memoizationKey = conditions to groupSizes
-
-        if (cache.containsKey(memoizationKey)) {
-            return cache.getValue(memoizationKey)
-        }
-
-        return (if (conditions.size > groupSizes.size) {
-            0L
-//        } else if (conditions.size == groupSizes.size) {
-//            conditions.zip(groupSizes)
-//                .map { (condition, groupSize) -> condition.length - groupSize + 1 }
-//                .map { it.coerceAtLeast(0) }
-//                .fold(1L) { acc, i -> acc * i }
-        } else {
-            val firstCondition = conditions.first()
+            val firstGroup = conditions.first()
             val firstGroupSize = groupSizes.first()
 
-            if (conditions.size == 1) {
-                "#{$firstGroupSize}".toRegex().findAll(firstCondition.text)
-                -1L
-            } else if (firstCondition.length < firstGroupSize) {
-                0L
-            } else if (firstCondition.length == firstGroupSize) {
-                if (conditions.size == 1 && groupSizes.size == 1) 1
-                else countPossibilities(conditions.drop(1), groupSizes.drop(1), depth + 1)
-            } else if (firstCondition.length > firstGroupSize) {
+            if (firstGroup.length < firstGroupSize) {
+                if (firstGroup.containsKnown) 0 else countPossibilities(conditions.drop(1), groupSizes)
+            } else if (firstGroup.length > firstGroupSize) {
                 var count = 0L
-                for (idx in firstGroupSize..<firstCondition.length - 1) {
-                    val (_, right) = firstCondition.splitAt(idx) ?: continue
-                    count += countPossibilities(listOf(right) + conditions.drop(1), groupSizes.drop(1), depth + 1)
+                if (firstGroup.containsKnown) {
+                    val maxLength = min(firstGroup.indexOfFirstKnown + firstGroupSize, firstGroup.length)
+                    for (i in firstGroupSize..maxLength) {
+                        val (_, subGroup) = firstGroup.splitAt(i) ?: continue
+                        val conditionList = if (subGroup.length > 0) listOf(subGroup) else emptyList()
+                        count += countPossibilities(conditionList + conditions.drop(1), groupSizes.drop(1))
+                    }
+                } else {
+                    for (i in firstGroupSize..firstGroup.length) {
+                        val (_, subGroup) = firstGroup.splitAt(i) ?: continue
+                        val conditionList = if (subGroup.length > 0) listOf(subGroup) else emptyList()
+                        count += countPossibilities(conditionList + conditions.drop(1), groupSizes.drop(1))
+                    }
+                    count += countPossibilities(conditions.drop(1), groupSizes)
                 }
                 count
             } else {
-//                countPossibilities(conditions.drop(1), groupSizes, depth + 1)
-                0L
-            }
-        }).also { cache[memoizationKey] = it }.also { count ->
-            if (count != 0L) {
-                print(depth.toString().padStart(2) + ": ")
-                repeat(depth) { print("    ") }
-                println("(${memoizationKey.first}, ${memoizationKey.second}) -> $count")
+                var count = countPossibilities(conditions.drop(1), groupSizes.drop(1))
+                if (!firstGroup.containsKnown) count += countPossibilities(conditions.drop(1), groupSizes)
+                count
             }
         }
-    }
 }
 
 private fun String.generateStringVariations(): List<String> {
@@ -186,26 +177,32 @@ private fun String.generateStringVariations(): List<String> {
     }
 }
 
-private fun part1(input: List<String>) = input.asSequence()
-    .map { line -> line.split(' ') }
-    .map { (conditions, groups) -> conditions to groups.allInts().toList() }
-    .flatMap { (conditions, groups) -> conditions.generateStringVariations().map { it.split('.') to groups } }
-    .map { (possibility, groups) -> possibility.filter(String::isNotEmpty) to groups }
-    .filter { (possibility, groups) -> possibility.map(String::length) == groups }
-    .count()
+internal fun countExhaustively(conditions: String, groupSizes: List<Int>): Long =
+    conditions.generateStringVariations()
+        .map { it.split('.') to groupSizes }
+        .map { (possibility, groups) -> possibility.filter(String::isNotEmpty) to groups }
+        .count { (possibility, groups) -> possibility.map(String::length) == groups }
+        .toLong()
 
-private fun part2(input: List<String>): Int {
+internal fun countRecursively(conditions: String, groupSizes: List<Int>): Long =
+    Counter().countPossibilities(Condition(conditions).softGroups, groupSizes)
+
+private fun part1(input: List<String>) = input
+    .map { line -> line.split(' ') }
+    .sumOf { (conditions, groups) -> countRecursively(conditions, groups.allInts().toList()) }
+
+private fun part2(input: List<String>) =
     input.map { line -> line.split(' ') }
-        .map { (conditions, groups) -> Condition(conditions).softGroups to groups.allInts().toList() }
-        .map { (conditions, groups) -> MemoizedCounter().countPossibilities(conditions, groups) }
-    return input.size
-}
+        .map { (conditions, groups) ->
+            "$conditions?$conditions?$conditions?$conditions?$conditions" to "$groups,$groups,$groups,$groups,$groups"
+        }
+        .sumOf { (conditions, groups) -> countRecursively(conditions, groups.allInts().toList()) }
 
 fun main() {
     // Test if implementation meets criteria from the description
     val testInput = problemInput.readTest()
-    check(part1(testInput) == 21)
-    check(part2(testInput) == 6)
+    check(part1(testInput) == 21L)
+    check(part2(testInput) == 525152L)
 
     val input = problemInput.read()
     part1(input).println()
