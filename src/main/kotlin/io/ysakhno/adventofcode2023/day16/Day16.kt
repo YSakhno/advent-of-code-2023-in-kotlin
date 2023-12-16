@@ -116,7 +116,6 @@ import io.ysakhno.adventofcode2023.util.println
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.Deque
 import java.util.LinkedList
-import kotlin.math.max
 
 private val problemInput = object : ProblemInput {}
 
@@ -128,68 +127,67 @@ private data class Tile(val x: Int, val y: Int) {
 
 private data class Photon(val x: Int, val y: Int, val dir: Direction)
 
+private fun List<List<Char>>.bordered() =
+    listOf(List(size + 2) { 'x' }).let { extraRow -> extraRow + map { listOf('x') + it + listOf('x') } + extraRow }
+
 private fun List<List<Char>>.countEnergized(startingPhoton: Photon): Int {
     val tiles = flatMapIndexed { y, row -> List(row.size) { x -> Tile(x, y) } }.associateWith { it }
     val photons: Deque<Photon> = LinkedList(listOf(startingPhoton))
 
     while (photons.isNotEmpty()) {
         val photon = photons.poll()
-        val tile = tiles[Tile(photon.x, photon.y)]
+        val tile = tiles.getValue(Tile(photon.x, photon.y))
 
-        if (tile != null) {
-            if (photon.dir in tile.dirs) continue
-            else tile.dirs += photon.dir
-        }
+        if (photon.dir !in tile.dirs) tile.dirs += photon.dir else continue
 
         photons += when (photon.dir) {
-            RIGHT -> if (photon.x + 1 < this[photon.y].size) when (this[photon.y][photon.x + 1]) {
+            RIGHT -> when (this[photon.y][photon.x + 1]) {
                 '.', '-' -> listOf(photon.copy(x = photon.x + 1))
                 '/' -> listOf(photon.copy(x = photon.x + 1, dir = UP))
                 '\\' -> listOf(photon.copy(x = photon.x + 1, dir = DOWN))
                 '|' -> listOf(photon.copy(x = photon.x + 1, dir = DOWN), photon.copy(x = photon.x + 1, dir = UP))
                 else -> emptyList()
-            } else emptyList()
+            }
 
-            DOWN -> if (photon.y + 1 < this.size) when (this[photon.y + 1][photon.x]) {
+            DOWN -> when (this[photon.y + 1][photon.x]) {
                 '.', '|' -> listOf(photon.copy(y = photon.y + 1))
                 '/' -> listOf(photon.copy(y = photon.y + 1, dir = LEFT))
                 '\\' -> listOf(photon.copy(y = photon.y + 1, dir = RIGHT))
                 '-' -> listOf(photon.copy(y = photon.y + 1, dir = LEFT), photon.copy(y = photon.y + 1, dir = RIGHT))
                 else -> emptyList()
-            } else emptyList()
+            }
 
-            LEFT -> if (photon.x - 1 >= 0) when (this[photon.y][photon.x - 1]) {
+            LEFT -> when (this[photon.y][photon.x - 1]) {
                 '.', '-' -> listOf(photon.copy(x = photon.x - 1))
                 '/' -> listOf(photon.copy(x = photon.x - 1, dir = DOWN))
                 '\\' -> listOf(photon.copy(x = photon.x - 1, dir = UP))
                 '|' -> listOf(photon.copy(x = photon.x - 1, dir = DOWN), photon.copy(x = photon.x - 1, dir = UP))
                 else -> emptyList()
-            } else emptyList()
+            }
 
-            UP -> if (photon.y - 1 >= 0) when (this[photon.y - 1][photon.x]) {
+            UP -> when (this[photon.y - 1][photon.x]) {
                 '.', '|' -> listOf(photon.copy(y = photon.y - 1))
                 '/' -> listOf(photon.copy(y = photon.y - 1, dir = RIGHT))
                 '\\' -> listOf(photon.copy(y = photon.y - 1, dir = LEFT))
                 '-' -> listOf(photon.copy(y = photon.y - 1, dir = RIGHT), photon.copy(y = photon.y - 1, dir = LEFT))
                 else -> emptyList()
-            } else emptyList()
+            }
         }
     }
 
-    return tiles.values.count { it.dirs.isNotEmpty() }
+    return tiles.values.count { it.dirs.isNotEmpty() } - 1
 }
 
-private fun part1(input: List<String>) = input.map(String::toList).countEnergized(Photon(-1, 0, RIGHT))
+private fun part1(input: List<String>) = input.map(String::toList).bordered().countEnergized(Photon(0, 1, RIGHT))
 
 private fun part2(input: List<String>): Int {
-    val layout = input.map(String::toList)
-    val max1 = layout.indices.maxOf { y ->
-        max(layout.countEnergized(Photon(-1, y, RIGHT)), layout.countEnergized(Photon(layout.first().size, y, LEFT)))
-    }
-    val max2 = layout.first().indices.maxOf { x ->
-        max(layout.countEnergized(Photon(x, -1, DOWN)), layout.countEnergized(Photon(x, layout.size, UP)))
-    }
-    return max(max1, max2)
+    val layout = input.map(String::toList).bordered()
+
+    return ((1..<layout.size - 1).flatMap { y ->
+        listOf(Photon(0, y, RIGHT), Photon(layout.first().lastIndex, y, LEFT))
+    } + (1..<layout.first().size - 1).flatMap { x ->
+        listOf(Photon(x, 0, DOWN), Photon(x, layout.lastIndex, UP))
+    }).maxOf(layout::countEnergized)
 }
 
 fun main() {
