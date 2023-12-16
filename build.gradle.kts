@@ -9,6 +9,7 @@ sourceSets {
 }
 
 dependencies {
+    implementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testImplementation(platform("io.kotest:kotest-bom:5.8.0"))
     testImplementation("io.kotest:kotest-assertions-api-jvm")
     testImplementation("io.kotest:kotest-framework-api-jvm")
