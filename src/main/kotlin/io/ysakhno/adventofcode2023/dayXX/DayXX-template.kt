@@ -5,6 +5,7 @@ package io.ysakhno.adventofcode2023.dayXX
 
 import io.ysakhno.adventofcode2023.util.ProblemInput
 import io.ysakhno.adventofcode2023.util.println
+import org.junit.jupiter.api.Assertions.assertEquals
 
 private val problemInput = object : ProblemInput {}
 
@@ -19,8 +20,8 @@ private fun part2(input: List<String>): Int {
 fun main() {
     // Test if implementation meets criteria from the description
     val testInput = problemInput.readTest()
-    check(part1(testInput) == 0)
-    check(part2(testInput) == 0)
+    assertEquals(0, part1(testInput), "Part one (sample input)")
+    assertEquals(0, part2(testInput), "Part two (sample input)")
 
     val input = problemInput.read()
     part1(input).println()
