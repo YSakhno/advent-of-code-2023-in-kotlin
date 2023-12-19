@@ -22,6 +22,7 @@ fun main() {
     val testInput = problemInput.readTest()
     assertEquals(0, part1(testInput), "Part one (sample input)")
     assertEquals(0, part2(testInput), "Part two (sample input)")
+    println("All tests passed")
 
     val input = problemInput.read()
     part1(input).println()
