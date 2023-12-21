@@ -150,6 +150,7 @@ package io.ysakhno.adventofcode2023.day20
 import io.ysakhno.adventofcode2023.day20.State.OFF
 import io.ysakhno.adventofcode2023.day20.State.ON
 import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.lcm
 import io.ysakhno.adventofcode2023.util.println
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.LinkedList
@@ -232,11 +233,19 @@ private fun Button.pressAndCount(): Pair<Long, Long> {
     return numLowPulses to numHighPulses
 }
 
-private fun Button.press() {
+private fun Button.press(pressesCount: Long, prevs: MutableMap<String, Long>, cycles: MutableMap<String, Long>) {
     val pulses = LinkedList<Pulse>().apply { addAll(process(DUMMY_PULSE)) }
 
     while (pulses.isNotEmpty()) {
-        pulses.poll().send().let(pulses::addAll)
+        val pulse = pulses.poll()
+        val pulseName = pulse.to.name
+
+        if (pulse.state == OFF && pulseName in prevs) {
+            prevs[pulseName]?.let { cycles[pulseName] = pressesCount - it }
+            prevs[pulseName] = pressesCount
+        }
+
+        pulse.send().let(pulses::addAll)
     }
 }
 
@@ -289,10 +298,20 @@ private fun part2(input: List<String>): Long {
     val receiver = modules.values.flatMap(Module::outputs).find { it.name == "rx" } as Receiver
     var count = 0L
 
+    val inverse = modules.mapValues { (_, module) -> module.outputs.map(Module::name) }
+        .entries
+        .fold(mutableMapOf<String, MutableList<String>>()) { acc, (key, values) ->
+            values.forEach { acc.getOrPut(it, ::mutableListOf).add(key) }
+            acc
+        }
+    val prevs = inverse.getValue(inverse.getValue("rx").first()).associateWith { 0L }.toMutableMap()
+    val cycles = mutableMapOf<String, Long>()
+
     while (!receiver.isActivated) {
-        button.press()
-        ++count
-        receiver.isActivated = true // otherwise takes forever, does not finish
+        button.press(++count, prevs, cycles)
+        if (cycles.size == prevs.size) {
+            return lcm(cycles.values.map { it.toBigInteger() }).toLong()
+        }
     }
 
     return count
