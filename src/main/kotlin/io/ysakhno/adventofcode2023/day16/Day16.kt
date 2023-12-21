@@ -112,6 +112,7 @@ import io.ysakhno.adventofcode2023.day16.Direction.LEFT
 import io.ysakhno.adventofcode2023.day16.Direction.RIGHT
 import io.ysakhno.adventofcode2023.day16.Direction.UP
 import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.bordered
 import io.ysakhno.adventofcode2023.util.println
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.Deque
@@ -126,9 +127,6 @@ private data class Tile(val x: Int, val y: Int) {
 }
 
 private data class Photon(val x: Int, val y: Int, val dir: Direction)
-
-private fun List<List<Char>>.bordered() =
-    listOf(List(size + 2) { 'x' }).let { extraRow -> extraRow + map { listOf('x') + it + listOf('x') } + extraRow }
 
 private fun List<List<Char>>.countEnergized(startingPhoton: Photon): Int {
     val tiles = flatMapIndexed { y, row -> List(row.size) { x -> Tile(x, y) } }.associateWith { it }
@@ -178,10 +176,10 @@ private fun List<List<Char>>.countEnergized(startingPhoton: Photon): Int {
     return tiles.values.count { it.dirs.isNotEmpty() } - 1
 }
 
-private fun part1(input: List<String>) = input.map(String::toList).bordered().countEnergized(Photon(0, 1, RIGHT))
+private fun part1(input: List<String>) = input.map(String::toList).bordered('x').countEnergized(Photon(0, 1, RIGHT))
 
 private fun part2(input: List<String>): Int {
-    val layout = input.map(String::toList).bordered()
+    val layout = input.map(String::toList).bordered('x')
 
     return ((1..<layout.size - 1).flatMap { y ->
         listOf(Photon(0, y, RIGHT), Photon(layout.first().lastIndex, y, LEFT))

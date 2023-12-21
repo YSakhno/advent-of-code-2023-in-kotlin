@@ -113,6 +113,7 @@ import io.ysakhno.adventofcode2023.day17.Direction.LEFT
 import io.ysakhno.adventofcode2023.day17.Direction.RIGHT
 import io.ysakhno.adventofcode2023.day17.Direction.UP
 import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.bordered
 import io.ysakhno.adventofcode2023.util.println
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.PriorityQueue
@@ -167,11 +168,6 @@ private data class Position(
 
 private fun Position.constructPath() = generateSequence(this, Position::prevPos).toList().reversed()
 
-private const val HUGE_LOSS = Int.MAX_VALUE / 2
-
-private fun List<List<Int>>.bordered() = listOf(List(size + 2) { HUGE_LOSS })
-    .let { extraRow -> extraRow + map { listOf(HUGE_LOSS) + it + listOf(HUGE_LOSS) } + extraRow }
-
 private fun List<List<Int>>.findShortestPath(
     starts: List<Position>,
     minStraightLineLength: Int = 1,
@@ -203,13 +199,13 @@ private fun List<List<Int>>.findShortestPath(
 }
 
 private fun part1(input: List<String>) = input.map { it.map(Char::digitToInt) }
-    .bordered()
+    .bordered(Int.MAX_VALUE / 2)
     .findShortestPath(listOf(Position(1, 1, RIGHT), Position(1, 1, DOWN)))
     .lastOrNull()
     ?.totalLoss ?: -1
 
 private fun part2(input: List<String>) = input.map { it.map(Char::digitToInt) }
-    .bordered()
+    .bordered(Int.MAX_VALUE / 2)
     .findShortestPath(listOf(Position(1, 1, RIGHT), Position(1, 1, DOWN)), 4) { possibleUltraDirections }
     .lastOrNull()
     ?.totalLoss ?: -1

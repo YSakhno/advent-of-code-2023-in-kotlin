@@ -158,15 +158,13 @@
 package io.ysakhno.adventofcode2023.day21
 
 import io.ysakhno.adventofcode2023.util.ProblemInput
+import io.ysakhno.adventofcode2023.util.bordered
 import io.ysakhno.adventofcode2023.util.println
 import org.junit.jupiter.api.Assertions.assertEquals
 
 private val problemInput = object : ProblemInput {}
 
 private data class Pt(val x: Int, val y: Int)
-
-private fun List<List<Char>>.bordered() = listOf(List(first().size + 2) { '#' })
-    .let { extraRow -> extraRow + map { listOf('#') + it + listOf('#') } + extraRow }
 
 private fun List<List<Char>>.neighbors(pt: Pt): List<Pt> {
     val (x, y) = pt
@@ -191,7 +189,7 @@ private fun part1(input: List<String>, numSteps: Int = 64): Int {
         }
     }
 
-    val map = input.map { it.toList().map { ch -> if (ch == 'S') '.' else ch } }.bordered()
+    val map = input.map { it.toList().map { ch -> if (ch == 'S') '.' else ch } }.bordered('#')
 
     return map.aimlesslyRoamAround(start, numSteps)
 }

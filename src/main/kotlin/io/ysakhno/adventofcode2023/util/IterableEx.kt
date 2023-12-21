@@ -38,3 +38,14 @@ fun Iterable<BigDecimal>.differences(): List<BigDecimal> = zipWithNext { a, b ->
  * corresponding position in the resulting list.
  */
 fun <E> Iterable<List<E>>.transpose(): List<List<E>> = firstOrNull()?.indices?.map { i -> map { it[i] } } ?: emptyList()
+
+/**
+ * Returns a bordered version of this list of lists using specified value as [border].  The input list may be empty, in
+ * which case the result is 2x2 grid of just the border itself.
+ *
+ * This function is useful when the list of lists represents a grid (or a map) of some sort, and traversing (moving
+ * about) the grid is necessary.  Bordering the original grid with some 'impassable' border element allows for easier
+ * navigation without the need for bounds checking.
+ */
+fun <E> List<List<E>>.bordered(border: E): List<List<E>> = listOf(List( (firstOrNull()?.size ?: 0) + 2) { border })
+    .let { extraRow -> extraRow + map { listOf(border) + it + listOf(border) } + extraRow }
