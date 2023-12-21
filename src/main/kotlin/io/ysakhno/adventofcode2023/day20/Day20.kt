@@ -152,6 +152,7 @@ import io.ysakhno.adventofcode2023.day20.State.ON
 import io.ysakhno.adventofcode2023.util.ProblemInput
 import io.ysakhno.adventofcode2023.util.lcm
 import io.ysakhno.adventofcode2023.util.println
+import io.ysakhno.adventofcode2023.util.transpose
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.util.LinkedList
 import kotlin.LazyThreadSafetyMode.NONE
@@ -298,12 +299,7 @@ private fun part2(input: List<String>): Long {
     val receiver = modules.values.flatMap(Module::outputs).find { it.name == "rx" } as Receiver
     var count = 0L
 
-    val inverse = modules.mapValues { (_, module) -> module.outputs.map(Module::name) }
-        .entries
-        .fold(mutableMapOf<String, MutableList<String>>()) { acc, (key, values) ->
-            values.forEach { acc.getOrPut(it, ::mutableListOf).add(key) }
-            acc
-        }
+    val inverse = modules.mapValues { (_, module) -> module.outputs.map(Module::name) }.transpose()
     val prevs = inverse.getValue(inverse.getValue("rx").first()).associateWith { 0L }.toMutableMap()
     val cycles = mutableMapOf<String, Long>()
 
