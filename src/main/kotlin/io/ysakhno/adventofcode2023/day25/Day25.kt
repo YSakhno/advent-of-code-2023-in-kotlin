@@ -39,6 +39,7 @@ package io.ysakhno.adventofcode2023.day25
 import io.ysakhno.adventofcode2023.util.ProblemInput
 import io.ysakhno.adventofcode2023.util.allWords
 import io.ysakhno.adventofcode2023.util.println
+import io.ysakhno.adventofcode2023.util.swap
 import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.math.max
 
@@ -79,8 +80,6 @@ private fun minimumCut(adjList: List<Collection<Int>>): Pair<Int, Int> {
         }
     }
 }
-
-fun <A, B> Pair<A, B>.swap(): Pair<B, A> = second to first
 
 private fun part1(input: List<String>): Int {
     val sentences = input.map { it.allWords().toList() }

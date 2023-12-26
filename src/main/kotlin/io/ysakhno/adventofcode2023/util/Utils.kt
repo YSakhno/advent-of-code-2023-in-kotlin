@@ -3,12 +3,6 @@
 package io.ysakhno.adventofcode2023.util
 
 import java.math.BigInteger
-import java.security.MessageDigest
-
-/** Converts string to MD5 hash. */
-fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteArray()))
-    .toString(16)
-    .padStart(32, '0')
 
 /** The cleaner shorthand for printing output. */
 fun <T> T.println() = also { println(this) }
@@ -63,3 +57,6 @@ fun lcm(vararg values: BigInteger): BigInteger = values.reduce { acc, value -> a
 
 /** Calculates the least common multiple (LCM) of the given [values]. */
 fun lcm(values: Iterable<BigInteger>): BigInteger = values.reduce { acc, value -> acc.lcm(value) }
+
+/** Swaps the first and second elements of this pair creating a new pair with the elements swapped. */
+fun <A, B> Pair<A, B>.swap(): Pair<B, A> = second to first
