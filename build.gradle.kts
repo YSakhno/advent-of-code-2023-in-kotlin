@@ -10,6 +10,7 @@ sourceSets {
 
 dependencies {
     implementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    implementation("io.github.tudo-aqua:z3-turnkey:4.8.14")
     testImplementation(platform("io.kotest:kotest-bom:5.8.0"))
     testImplementation("io.kotest:kotest-assertions-api-jvm")
     testImplementation("io.kotest:kotest-framework-api-jvm")

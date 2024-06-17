@@ -127,18 +127,19 @@
  */
 package io.ysakhno.adventofcode2023.day24
 
+import com.microsoft.z3.Context
+import com.microsoft.z3.IntNum
 import io.ysakhno.adventofcode2023.util.ProblemInput
 import io.ysakhno.adventofcode2023.util.allLongs
 import io.ysakhno.adventofcode2023.util.println
-import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.math.abs
-import kotlin.math.sqrt
+import org.junit.jupiter.api.Assertions.assertEquals
 
 private val problemInput = object : ProblemInput {}
 
-data class Vector2D(val x: Double, val y: Double)
+private data class Vector2D(val x: Double, val y: Double)
 
-fun Vector2D.crossProduct(other: Vector2D) = x * other.y - y * other.x
+private fun Vector2D.crossProduct(other: Vector2D) = x * other.y - y * other.x
 
 private operator fun Vector3D.unaryMinus() = Vector3D(x = -x, y = -y, z = -z)
 
@@ -148,16 +149,14 @@ private operator fun Vector2D.plus(other: Vector2D) = Vector2D(x = x + other.x, 
 
 private operator fun Vector2D.times(other: Vector2D) = crossProduct(other)
 
-data class Vector3D(val x: Double, val y: Double, val z: Double) {
-    val isEmpty get() = x eq 0.0 && y eq 0.0 && z eq 0.0
-    val magnitude get() = sqrt(x * x + y * y + z * z)
+private data class Vector3D(val x: Long, val y: Long, val z: Long) {
+    val isEmpty get() = x == 0L && y == 0L && z == 0L
+    infix fun isParallelTo(other: Vector3D) = if (isEmpty || other.isEmpty) false else x(other).isEmpty
 }
 
-fun Vector3D.normalized() = magnitude.let { if (it ne 0.0) Vector3D(x = x / it, y = y / it, z = z / it) else this }
+private fun Vector3D.dotProduct(other: Vector3D) = x * other.x + y * other.y + z * other.z
 
-fun Vector3D.dotProduct(other: Vector3D) = x * other.x + y * other.y + z * other.z
-
-fun Vector3D.crossProduct(other: Vector3D): Vector3D = Vector3D(
+private fun Vector3D.crossProduct(other: Vector3D): Vector3D = Vector3D(
     x = y * other.z - z * other.y,
     y = z * other.x - x * other.z,
     z = x * other.y - y * other.x,
@@ -171,17 +170,17 @@ private operator fun Vector3D.minus(other: Vector3D) = Vector3D(x = x - other.x,
 
 private operator fun Vector3D.times(other: Vector3D) = dotProduct(other)
 
-private operator fun Vector3D.times(scale: Double) = Vector3D(x = x * scale, y = y * scale, z = z * scale)
+private operator fun Vector3D.times(scale: Long) = scale.let { Vector3D(x = x * it, y = y * it, z = z * it) }
 
-private operator fun Double.times(vector: Vector3D) = vector * this
+private operator fun Long.times(vector: Vector3D) = vector * this
 
 private infix fun Vector3D.x(other: Vector3D) = crossProduct(other)
 
-data class Ray2D(val start: Vector2D, val direction: Vector2D)
+private data class Ray2D(val start: Vector2D, val direction: Vector2D)
 
 private operator fun Double.times(vector: Vector2D) = Vector2D(x = this * vector.x, y = this * vector.y)
 
-fun Ray2D.intersect(other: Ray2D): Vector2D? {
+private fun Ray2D.intersect(other: Ray2D): Vector2D? {
     val denominator = direction * other.direction
     if (abs(denominator) < 1.0e-6) {
         return null
@@ -191,133 +190,81 @@ fun Ray2D.intersect(other: Ray2D): Vector2D? {
     return if (t >= 0.0 && u >= 0.0) start + t * direction else null
 }
 
-data class Ray3D(val start: Vector3D, val direction: Vector3D)
-
-infix fun Double.eq(other: Double) = abs(other - this) < 1.0e-6
-
-infix fun Double.ne(other: Double) = abs(other - this) >= 1.0e-6
-
-fun Ray3D.intersect(b: Ray3D): Vector3D? {
-    val dc = b.start - start
-    val cp = direction x b.direction
-
-    if (dc * cp ne 0.0) return null // lines are not coplanar
-
-    val t = ((dc x b.direction) * cp) / (cp * cp)
-    return start + direction * t
+private data class Ray3D(val start: Vector3D, val direction: Vector3D) {
+    infix fun isParallelTo(other: Ray3D) = direction isParallelTo other.direction
 }
 
-data class Hailstone(
-    val x: Double,
-    val y: Double,
-    val z: Double,
-    val vx: Double,
-    val vy: Double,
-    val vz: Double
-) {
-    val velocity2D get() = Vector2D(vx, vy)
+private data class Hailstone(val x: Long, val y: Long, val z: Long, val vx: Long, val vy: Long, val vz: Long) {
+    val velocity2D get() = Vector2D(vx.toDouble(), vy.toDouble())
     val velocity3D get() = Vector3D(vx, vy, vz)
-    val ray2D get() = Ray2D(start = Vector2D(x, y), direction = velocity2D)
+    val ray2D get() = Ray2D(start = Vector2D(x.toDouble(), y.toDouble()), direction = velocity2D)
     val ray3D get() = Ray3D(start = Vector3D(x, y, z), direction = velocity3D)
-}
-
-fun Hailstone.nextPosition() = positionAt(1.0)
-
-fun Hailstone.positionAt(t: Double) = Vector3D(x = x + vx * t, y = y + vy * t, z = z + vz * t)
-
-fun isCollinear(a: Vector3D, b: Vector3D, c: Vector3D): Boolean {
-    val ab = b - a
-    val bc = c - b
-    val product = ab x bc
-    return product.isEmpty
 }
 
 private operator fun <E> List<E>.component6() = this[5]
 
+private fun List<String>.hailstones() =
+    map { it.allLongs().toList() }.map { (x, y, z, vx, vy, vz) -> Hailstone(x, y, z, vx, vy, vz) }
+
 private fun part1(input: List<String>, range: ClosedRange<Double>): Int {
-    val stones = input.map { it.allLongs().map(Long::toDouble).toList() }.map { (x, y, z, vx, vy, vz) -> Hailstone(x, y, z, vx, vy, vz) }
+    val stones = input.hailstones()
     return stones.flatMapIndexed { idx1, stone1 ->
         stones.drop(idx1 + 1).map { stone2 -> stone1 to stone2 }
     }.mapNotNull { (stone1, stone2) -> stone1.ray2D.intersect(stone2.ray2D) }
         .count { pt -> pt.x in range && pt.y in range }
 }
 
-fun infinitePairwiseSequence() = sequence {
-    var i = 1
-    while (true) {
-        for (j in 1..i) {
-            yield(j to i + 1 - j)
+private fun part2(input: List<String>): Long {
+    val stones = input.hailstones()
+    val nonParallelStones = stones.filterNot { stones.first().ray3D isParallelTo it.ray3D }
+
+    return Context().use { ctx ->
+        val x = ctx.mkIntConst("x")
+        val y = ctx.mkIntConst("y")
+        val z = ctx.mkIntConst("z")
+        val vx = ctx.mkIntConst("vx")
+        val vy = ctx.mkIntConst("vy")
+        val vz = ctx.mkIntConst("vz")
+
+        val solver = ctx.mkSolver()
+
+        for (i in 1..3) {
+            val t = ctx.mkIntConst("t$i")
+            val stone = nonParallelStones[i]
+
+            // x + t * vx == stone_x + t * stone_vx
+            solver.add(
+                ctx.mkEq(
+                    ctx.mkAdd(x, ctx.mkMul(t, vx)),
+                    ctx.mkAdd(ctx.mkInt(stone.x), ctx.mkMul(t, ctx.mkInt(stone.vx))),
+                ),
+            )
+            // y + t * vy == stone_y + t * stone_vy
+            solver.add(
+                ctx.mkEq(
+                    ctx.mkAdd(y, ctx.mkMul(t, vy)),
+                    ctx.mkAdd(ctx.mkInt(stone.y), ctx.mkMul(t, ctx.mkInt(stone.vy))),
+                ),
+            )
+            // z + t * vz == stone_z + t * stone_vz
+            solver.add(
+                ctx.mkEq(
+                    ctx.mkAdd(z, ctx.mkMul(t, vz)),
+                    ctx.mkAdd(ctx.mkInt(stone.z), ctx.mkMul(t, ctx.mkInt(stone.vz))),
+                ),
+            )
         }
-        ++i
+
+        solver.check()
+        (solver.model.evaluate(ctx.mkAdd(x, y, z), false) as IntNum).int64
     }
-}
-
-fun findIntersectingRay(line1: Ray3D, line2: Ray3D, line3: Ray3D): Ray3D {
-    val n1 = line1.direction x line2.direction // normal vector for plane 1
-    val n2 = (n1 x (line1.start - line2.start)).normalized() // normal vector for plane 2
-    val p3 = (n1 * n2) * line3.start - (n1 * line3.direction) * line1.start - (n2 * line3.direction) * line2.start
-    return Ray3D(p3, (line1.direction x line2.direction).normalized()) // direction is the normal vector for plane 1 x plane 2
-}
-
-fun findIntersectingLine(line1: Ray3D, line2: Ray3D, line3: Ray3D): Ray3D {
-    val crossProduct1 = line2.direction x line3.direction
-    val crossProduct2 = line1.direction x line3.direction
-    val crossProduct3 = line1.direction x line2.direction
-
-    val numerator = Vector3D(line1.start * crossProduct1, line2.start * crossProduct2, line3.start * crossProduct3)
-    val denominator = (line1.direction * crossProduct1)
-        .let { if (it eq 0.0) line2.direction * crossProduct2 else it }
-        .let { if (it eq 0.0) line3.direction * crossProduct3 else it }
-
-    val intersectionPoint = Vector3D(numerator.x / denominator, numerator.y / denominator, numerator.z / denominator)
-
-    return Ray3D(intersectionPoint, crossProduct1 x crossProduct2)
-}
-
-private fun part2(input: List<String>): Int {
-    val stones = input.map { it.allLongs().map(Long::toDouble).toList() }.map { (x, y, z, vx, vy, vz) -> Hailstone(x, y, z, vx, vy, vz) }
-    val (stone1, stone2, stone3) = stones
-
-    findIntersectingLine(stone1.ray3D, stone2.ray3D, stone3.ray3D).let { ray ->
-        ray.intersect(stone1.ray3D).println()
-        stone1.ray3D.intersect(ray).println()
-    }
-
-//    infinitePairwiseSequence().filter { it.first != it.second }.take(100).forEach { (t1, t2) ->
-//        val pt1 = stone1.positionAt(t1.toDouble())
-//        val pt2 = stone2.positionAt(t2.toDouble())
-//        val diff = pt2 - pt1
-//        val dist = diff.magnitude
-//
-//        if (truncate(dist) eq dist) {
-//            val start = pt1 - diff.normalized() * t1.toDouble()
-//        }
-//
-//    }
-//
-//    outer@for (t1 in 0..<10_000) {
-//        val pt1 = stone1.positionAt(t1.toDouble())
-//        for (t2 in 0..<10_000) {
-//            val pt2 = stone2.positionAt(t2.toDouble())
-//            for (t3 in 0..<10_000) {
-//                val pt3 = stone3.positionAt(t3.toDouble())
-//
-//                if (isCollinear(pt1, pt2, pt3)) {
-//                    println("Collinear at $t1, $t2, $t3")
-//                    break@outer
-//                }
-//            }
-//        }
-//    }
-
-    return input.size
 }
 
 fun main() {
     // Test if implementation meets criteria from the description
     val testInput = problemInput.readTest()
     assertEquals(2, part1(testInput, 7.0..27.0), "Part one (sample input)")
-    assertEquals(5, part2(testInput), "Part two (sample input)")
+    assertEquals(47, part2(testInput), "Part two (sample input)")
     println("All tests passed")
 
     val input = problemInput.read()
